@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"reflect"
 	"testing"
 )
 
@@ -14,8 +18,42 @@ func TestGetEncryptedPassword(t *testing.T) {
 		"11C8540CF72C58FC601F72C3A019448399AB0DB0AC83AEC11753E06AF0E0CDE46388F07C47BD74F0A75095"
 
 	// Get Password
-	_, err := GetEncryptedPassword("password", publicKey)
+	encpass, err := GetEncryptedPassword("password", publicKey)
+
+	if encpass == "" {
+		if err.Error() == "can not convert public key" {
+			t.Fatal(err)
+		}
+		if err == nil {
+			t.Fatal("encrypt fail")
+		}
+	}
+}
+
+func TestPrepareAuthRequest(t *testing.T) {
+	expectedReqBody := SangforAuthReq{}
+	expectedReqBody.Auth.PasswordCredentials.Username = "test"
+	expectedReqBody.Auth.PasswordCredentials.Password = "test123"
+
+	// Convert struct to json data
+	expectedReqBodyJson, err := json.Marshal(expectedReqBody)
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedReq, err := http.NewRequest("POST", "test.com/api/authenticate", bytes.NewReader(expectedReqBodyJson))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedReq.Body.Close()
+
+	req, err := prepareAuthRequest("test", "test123", "test.com/api")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(req.Body, expectedReq.Body) || req.Method != expectedReq.Method || req.URL.String() != expectedReq.URL.String() {
 		t.Fatal(err)
 	}
 }
