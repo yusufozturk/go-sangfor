@@ -2,6 +2,18 @@
 
 Go library for the Sangfor API
 
+**Current release only outputs encrypted password and auth token.**
+
+## Usage:
+
+.\go-sangfor.exe -host "https://10.10.10.10" -username "admin" -password 'Passw0rd1'
+
+## Output:
+
+Encrypted Password: 886558245e65bd2930ecfa28d9c478a4766c2d8e51d3bc9e4df688e890bc07c804..
+
+Token:  bfdc5e93414a4b5fbc0f8541a6c4abc2
+
 ## General Information
 
 - Code written in Golang.
