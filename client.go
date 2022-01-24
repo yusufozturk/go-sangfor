@@ -17,20 +17,22 @@ type Client struct {
 
 // GetAPIClient Gets Sangfor API Client
 func GetAPIClient(host string) *Client {
-
 	// Create custom transport layer configuration
-	tr := http.Transport{}
-	tr.TLSClientConfig.InsecureSkipVerify = true
-	tr.TLSClientConfig.MinVersion = getMinTLSVersion()
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+			MinVersion:         getMinTLSVersion(),
+		},
+	}
 
 	// Create HTTP Client
-	httpClient := http.Client{
-		Transport: &tr,
+	httpClient := &http.Client{
+		Transport: tr,
 	}
 
 	// Sangfor API Client
 	client := &Client{
-		Client: &httpClient,
+		Client: httpClient,
 		Valid:  true,
 	}
 
