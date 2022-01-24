@@ -15,29 +15,10 @@ import (
 
 // Authenticate Function to make authentication request
 func (client *Client) Authenticate(username, encryptedPassword string) error {
-	// Get Auth Body
-	authRequest := SangforAuthReq{}
-	authRequest.Auth.PasswordCredentials.Username = username
-	authRequest.Auth.PasswordCredentials.Password = encryptedPassword
-
-	// Convert struct to json data
-	reqBody, err := json.Marshal(authRequest)
-
+	req, err := prepareAuthRequest(username, encryptedPassword, client.BaseAPIURL)
 	if err != nil {
 		return err
 	}
-
-	// Create request for authentication
-	req, err := http.NewRequest("POST", client.BaseAPIURL+"/authenticate", bytes.NewReader(reqBody))
-	if err != nil {
-		return err
-	}
-
-	// Set request headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Cookie", "aCMPAuthToken="+getUUID())
-
-	defer req.Body.Close()
 
 	// Make authentication
 	resp, err := client.Client.Do(req)
@@ -73,6 +54,33 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 	}
 
 	return errors.New("token is not available")
+}
+
+func prepareAuthRequest(uname, encpass, baseurl string) (*http.Request, error) {
+	// Create Auth Body
+	authRequest := SangforAuthReq{}
+	authRequest.Auth.PasswordCredentials.Username = uname
+	authRequest.Auth.PasswordCredentials.Password = encpass
+
+	// Convert struct to json data
+	reqBody, err := json.Marshal(authRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create request for authentication
+	req, err := http.NewRequest("POST", baseurl+"/authenticate", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, err
+	}
+
+	// Set request headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Cookie", "aCMPAuthToken="+getUUID())
+
+	defer req.Body.Close()
+
+	return req, nil
 }
 
 // GetPublicKey Gets Sangfor API Public Key
