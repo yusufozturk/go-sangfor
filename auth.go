@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"io"
 	"math/big"
+	"net/http"
 	"strings"
 )
 
@@ -16,14 +20,38 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 	authRequest.Auth.PasswordCredentials.Username = username
 	authRequest.Auth.PasswordCredentials.Password = encryptedPassword
 
-	// Make Authentication
+	// Convert struct to json data
+	reqBody, err := json.Marshal(authRequest)
+
+	if err != nil {
+		return err
+	}
+
+	// Create request for authentication
+	req, err := http.NewRequest("POST", client.BaseAPIURL+"/authenticate", bytes.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+
+	// Set request headers
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Cookie", "aCMPAuthToken="+getUUID())
+
+	// Make authentication
+	resp, err := client.Client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	// Read response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	// Convert JSON response to struct
 	authResponse := &SangforAuthResponse{}
-	restyResponse, err := client.Client.R().
-		SetResult(authResponse).
-		SetBody(authRequest).
-		SetHeader("Content-Type", "application/json").
-		SetHeader("Cookie", "aCMPAuthToken="+getUUID()).
-		Post(client.BaseAPIURL + "/authenticate")
+	err = json.Unmarshal(respBody, authResponse)
 	if err != nil {
 		return err
 	}
@@ -40,21 +68,26 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 		return nil
 	}
 
-	// Check Message
-	if restyResponse != nil {
-		return errors.New(restyResponse.String())
-	}
-
 	return errors.New("token is not available")
 }
 
 // GetPublicKey Gets Sangfor API Public Key
 func GetPublicKey(client *Client) (string, error) {
 	// Get Public Key
+	resp, err := client.Client.Get(client.BaseAPIURL + "/public-key")
+	if err != nil {
+		return "", err
+	}
+
+	// Read response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Convert JSON response to struct
 	sangforPK := &SangforPK{}
-	_, err := client.Client.R().
-		SetResult(sangforPK).
-		Get(client.BaseAPIURL + "/public-key")
+	err = json.Unmarshal(respBody, sangforPK)
 	if err != nil {
 		return "", err
 	}

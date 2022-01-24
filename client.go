@@ -2,24 +2,35 @@ package main
 
 import (
 	"crypto/tls"
+	"net/http"
 	"time"
-
-	"github.com/go-resty/resty/v2"
 )
+
+// Client represents a connection to Sangfor
+type Client struct {
+	Client     *http.Client
+	BaseAPIURL string
+	PublicKey  string
+	Token      string
+	Valid      bool
+}
 
 // GetAPIClient Gets Sangfor API Client
 func GetAPIClient(host string) *Client {
-	// Resty Client
-	restyClient := resty.New()
-	restyClient.SetTLSClientConfig(
-		&tls.Config{
-			InsecureSkipVerify: true,
-			MinVersion:         GetMinTLSVersion(),
-		})
+
+	// Create custom transport layer configuration
+	tr := http.Transport{}
+	tr.TLSClientConfig.InsecureSkipVerify = true
+	tr.TLSClientConfig.MinVersion = getMinTLSVersion()
+
+	// Create HTTP Client
+	httpClient := http.Client{
+		Transport: &tr,
+	}
 
 	// Sangfor API Client
 	client := &Client{
-		Client: restyClient,
+		Client: &httpClient,
 		Valid:  true,
 	}
 
@@ -29,18 +40,9 @@ func GetAPIClient(host string) *Client {
 	return client
 }
 
-// GetMinTLSVersion Gets Minimum TLS Version
-func GetMinTLSVersion() uint16 {
+// getMinTLSVersion Gets Minimum TLS Version
+func getMinTLSVersion() uint16 {
 	return tls.VersionTLS12
-}
-
-// Client represents a connection to Sangfor
-type Client struct {
-	Client     *resty.Client
-	BaseAPIURL string
-	PublicKey  string
-	Token      string
-	Valid      bool
 }
 
 // SangforAuthResponse represents the auth response
