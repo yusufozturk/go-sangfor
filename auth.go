@@ -37,11 +37,15 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Cookie", "aCMPAuthToken="+getUUID())
 
+	defer req.Body.Close()
+
 	// Make authentication
 	resp, err := client.Client.Do(req)
 	if err != nil {
 		return err
 	}
+
+	defer resp.Body.Close()
 
 	// Read response body
 	respBody, err := io.ReadAll(resp.Body)
