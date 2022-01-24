@@ -28,11 +28,6 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 		return err
 	}
 
-	// Check Response
-	if authResponse == nil {
-		return errors.New("no response")
-	}
-
 	// Check Token
 	if authResponse.Data.Access.Token.ID != "" {
 		// Set Token
