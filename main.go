@@ -19,17 +19,20 @@ func main() {
 
 	// Check Host
 	if *hostFlag == "" {
-		panic(errors.New("host parameter is missing"))
+		fmt.Println(errors.New("host parameter is missing"))
+		return
 	}
 
 	// Check Username
 	if *usernameFlag == "" {
-		panic(errors.New("username parameter is missing"))
+		fmt.Println(errors.New("username parameter is missing"))
+		return
 	}
 
 	// Check Password
 	if *passwordFlag == "" {
-		panic(errors.New("password parameter is missing"))
+		fmt.Println(errors.New("password parameter is missing"))
+		return
 	}
 
 	// Get Authentication Token
@@ -43,22 +46,26 @@ func run(host, username, password string) {
 	// Get Public Key for Authentication
 	publicKey, err := GetPublicKey(client)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	// Encrypt Password
 	encryptedPassword, err := GetEncryptedPassword(password, publicKey)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	// Authenticate
 	err = client.Authenticate(username, encryptedPassword)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 
 	// Output
-	fmt.Println(encryptedPassword)
-	fmt.Println(client.Token)
+	fmt.Println("Encrypted Password: ", encryptedPassword)
+	fmt.Println("---------------------------------------")
+	fmt.Println("Token: ", client.Token)
 }

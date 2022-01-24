@@ -18,7 +18,7 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 
 	// Make Authentication
 	authResponse := &SangforAuthResponse{}
-	_, err := client.Client.R().
+	restyResponse, err := client.Client.R().
 		SetResult(authResponse).
 		SetBody(authRequest).
 		SetHeader("Content-Type", "application/json").
@@ -34,14 +34,18 @@ func (client *Client) Authenticate(username, encryptedPassword string) error {
 	}
 
 	// Check Token
-	if authResponse.Data.Access.Token.ID == "" {
-		return errors.New("token is not available")
+	if authResponse.Data.Access.Token.ID != "" {
+		// Set Token
+		client.Token = authResponse.Data.Access.Token.ID
+		return nil
 	}
 
-	// Set Token
-	client.Token = authResponse.Data.Access.Token.ID
+	// Check Message
+	if restyResponse != nil {
+		return errors.New(restyResponse.String())
+	}
 
-	return nil
+	return errors.New("token is not available")
 }
 
 // GetPublicKey Gets Sangfor API Public Key
