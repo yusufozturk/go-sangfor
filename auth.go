@@ -67,6 +67,11 @@ func GetPublicKey(client *Client) (string, error) {
 	// Close Response
 	defer resp.Body.Close()
 
+	// Check Response Code
+	if resp.StatusCode != 200 {
+		return "", errors.New(resp.Status)
+	}
+
 	// Read Response Body
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {

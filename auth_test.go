@@ -4,6 +4,115 @@ import (
 	"testing"
 )
 
+func TestAuthenticate_OK(t *testing.T) {
+	// Test Response
+	authResponse := &SangforAuthResponse{}
+	authResponse.Data.Access.Token.ID = "Test"
+
+	// Mock Database
+	db := MockDatabase{}
+	db.AddToDatabase("", authResponse)
+
+	// Get Client
+	client := GetAPIClient("host")
+	client.Client.Transport = NewMockTransport(200, map[string]string{}, db.Database)
+
+	// Authenticate
+	err := client.Authenticate("", "")
+
+	// Check Errors
+	if err != nil {
+		t.Fatal(err)
+		return
+	}
+}
+
+func TestAuthenticate_NoToken(t *testing.T) {
+	// Test Response
+	authResponse := &SangforAuthResponse{}
+	authResponse.Data.Access.Token.ID = ""
+
+	// Mock Database
+	db := MockDatabase{}
+	db.AddToDatabase("", authResponse)
+
+	// Get Client
+	client := GetAPIClient("host")
+	client.Client.Transport = NewMockTransport(200, map[string]string{}, db.Database)
+
+	// Authenticate
+	err := client.Authenticate("", "")
+
+	// Check Errors
+	if err == nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetPublicKey_OK(t *testing.T) {
+	// Test Response
+	sangforPK := SangforPK{}
+	sangforPK.Data.PublicKey = "PublicKey"
+
+	// Mock Database
+	db := MockDatabase{}
+	db.AddToDatabase("", sangforPK)
+
+	// Get Client
+	client := GetAPIClient("host")
+	client.Client.Transport = NewMockTransport(200, map[string]string{}, db.Database)
+
+	// Get Public Key
+	publicKey, err := GetPublicKey(client)
+
+	// Check Public Key
+	if publicKey == "PublicKey" {
+		return
+	}
+
+	// Check Errors
+	if err == nil {
+		t.Fatal("connection is failed")
+		return
+	}
+
+	t.Fatal(err)
+}
+
+func TestGetPublicKey_Error(t *testing.T) {
+	// Get Client
+	client := GetAPIClient("host")
+	client.Client.Transport = NewMockTransport(500, map[string]string{}, map[string][]byte{})
+
+	// Get Public Key
+	_, err := GetPublicKey(client)
+
+	// Check Errors
+	if err == nil {
+		t.Fatal("connection is failed")
+		return
+	}
+}
+
+func TestGetPublicKey_JSONError(t *testing.T) {
+	// Test Response
+	sangforPK := SangforPK{}
+	sangforPK.Data.PublicKey = "PublicKey"
+
+	// Get Client
+	client := GetAPIClient("host")
+	client.Client.Transport = NewMockTransport(200, map[string]string{}, map[string][]byte{})
+
+	// Get Public Key
+	_, err := GetPublicKey(client)
+
+	// Check Errors
+	if err == nil {
+		t.Fatal("json validation is failed")
+		return
+	}
+}
+
 func TestGetEncryptedPassword(t *testing.T) {
 	// Public Key
 	publicKey := "D9905621B5800B5BEC903FB5E96C42DF23B6B0ABC9878C7310A62254DD0F8B54C6027C5A0C0511" +
