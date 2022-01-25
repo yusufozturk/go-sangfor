@@ -35,37 +35,39 @@ func main() {
 		return
 	}
 
+	// Get Client
+	client := GetAPIClient(*hostFlag)
+
 	// Get Authentication Token
-	run(*hostFlag, *usernameFlag, *passwordFlag)
+	err := run(client, *usernameFlag, *passwordFlag)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
-func run(host, username, password string) {
-	// Get Client
-	client := GetAPIClient(host)
-
+func run(client *Client, username, password string) error {
 	// Get Public Key for Authentication
 	publicKey, err := GetPublicKey(client)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	// Encrypt Password
 	encryptedPassword, err := GetEncryptedPassword(password, publicKey)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	// Authenticate
 	err = client.Authenticate(username, encryptedPassword)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	// Output
 	fmt.Println("Encrypted Password: ", encryptedPassword)
 	fmt.Println("---------------------------------------")
 	fmt.Println("Token: ", client.Token)
+
+	return nil
 }

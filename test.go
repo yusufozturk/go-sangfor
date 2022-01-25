@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -62,6 +63,10 @@ func (r *MockResponse) MakeResponse(req *http.Request) *http.Response {
 	// Get HTTP Response
 	httpResponse := r.Body[req.URL.String()]
 	if httpResponse == nil {
+		// Print Empty Request
+		fmt.Println(req.URL.String())
+
+		// Get First Available Process
 		for _, response := range r.Body {
 			httpResponse = response
 			break
